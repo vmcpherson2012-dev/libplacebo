@@ -235,7 +235,9 @@ void pl_color_repr_limits(const struct pl_color_repr *repr,
         const int shift = col_bits + bits->bit_shift - 8;
         ymin = cmin = 16 << shift;
         ymax = 235 << shift;
-        cmax = 240 << shift;
+        // Only YCbCr chroma has the wider 240 limit; the G and B channels of
+        // a limited range RGB signal share the 16-235 range of R
+        cmax = repr->sys == PL_COLOR_SYSTEM_RGB ? ymax : 240 << shift;
     } else {
         ymin = cmin = 0;
         ymax = cmax = max_value;

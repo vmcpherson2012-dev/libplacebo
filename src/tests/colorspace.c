@@ -199,6 +199,12 @@ int main()
             .min  = BITVALUES(16,  4096,  4096,  4096,     0),
             .max  = BITVALUES(16, 60160, 61440, 61440, 65535),
         }, {
+            .repr.sys    = PL_COLOR_SYSTEM_RGB,
+            .repr.levels = PL_COLOR_LEVELS_LIMITED,
+            .repr.bits = { .color_depth = 10, .sample_depth = 10 },
+            .min  = BITVALUES(10,  64,  64,  64,    0),
+            .max  = BITVALUES(10, 940, 940, 940, 1023),
+        }, {
             .repr.levels = PL_COLOR_LEVELS_FULL,
             .repr.bits = { .color_depth = 10, .sample_depth = 16 },
             .min  = BITVALUES(16,    0,    0,    0,    0),

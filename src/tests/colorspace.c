@@ -181,29 +181,36 @@ int main()
     } limit_tests[] = {
         {
             .repr.levels = PL_COLOR_LEVELS_LIMITED,
-            .min  = BITVALUES(8,  16,  16,  16,   0),
-            .max  = BITVALUES(8, 235, 240, 240, 255),
+            .min  = BITVALUES(8,   1,   1,   1,   0),
+            .max  = BITVALUES(8, 254, 254, 254, 255),
         }, {
             .repr.levels = PL_COLOR_LEVELS_LIMITED,
             .repr.bits = { .color_depth = 10, .sample_depth = 16 },
-            .min  = BITVALUES(16,  64,  64,  64,    0),
-            .max  = BITVALUES(16, 940, 960, 960, 1023),
+            .min  = BITVALUES(16,    4,    4,    4,    0),
+            .max  = BITVALUES(16, 1019, 1019, 1019, 1023),
         }, {
             .repr.levels = PL_COLOR_LEVELS_LIMITED,
             .repr.bits = { .color_depth = 10, .sample_depth = 16, .bit_shift = 6 },
-            .min  = BITVALUES(16,  4096,  4096,  4096,     0),
-            .max  = BITVALUES(16, 60160, 61440, 61440, 65472),
+            .min  = BITVALUES(16,   256,   256,   256,     0),
+            .max  = BITVALUES(16, 65216, 65216, 65216, 65472),
         }, {
             .repr.levels = PL_COLOR_LEVELS_LIMITED,
             .repr.bits = { .color_depth = 16 },
-            .min  = BITVALUES(16,  4096,  4096,  4096,     0),
-            .max  = BITVALUES(16, 60160, 61440, 61440, 65535),
+            .min  = BITVALUES(16,   256,   256,   256,     0),
+            .max  = BITVALUES(16, 65279, 65279, 65279, 65535),
         }, {
             .repr.sys    = PL_COLOR_SYSTEM_RGB,
             .repr.levels = PL_COLOR_LEVELS_LIMITED,
             .repr.bits = { .color_depth = 10, .sample_depth = 10 },
-            .min  = BITVALUES(10,  64,  64,  64,    0),
-            .max  = BITVALUES(10, 940, 940, 940, 1023),
+            .min  = BITVALUES(10,    4,    4,    4,    0),
+            .max  = BITVALUES(10, 1019, 1019, 1019, 1023),
+        }, {
+            // 8-bit precision in a 10-bit sample (MSB-aligned)
+            .repr.sys    = PL_COLOR_SYSTEM_RGB,
+            .repr.levels = PL_COLOR_LEVELS_LIMITED,
+            .repr.bits = { .color_depth = 8, .sample_depth = 10, .bit_shift = 2 },
+            .min  = BITVALUES(10,    4,    4,    4,    0),
+            .max  = BITVALUES(10, 1016, 1016, 1016, 1020),
         }, {
             .repr.levels = PL_COLOR_LEVELS_FULL,
             .repr.bits = { .color_depth = 10, .sample_depth = 16 },

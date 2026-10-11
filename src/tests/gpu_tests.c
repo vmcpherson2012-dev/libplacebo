@@ -2092,9 +2092,9 @@ static void pl_ycbcr_tests(pl_gpu gpu)
                 uint16_t *src_pixel = (uint16_t *) &src_buffer[i][off];
                 uint16_t *dst_pixel = (uint16_t *) &dst_buffer[off];
                 // Test that the dst_pixel is correctly clamped to the
-                // legal signal range
-                const uint16_t min_val = 16 << (depth - 8);
-                const uint16_t max_val = (i ? 240 : 235) << (depth - 8);
+                // legal signal range (footroom and headroom included)
+                const uint16_t min_val = 1 << (depth - 8);
+                const uint16_t max_val = (255 << (depth - 8)) - 1;
                 uint16_t src_clamped = PL_CLAMP(*src_pixel, min_val, max_val);
                 int diff = abs((int) src_clamped - (int) *dst_pixel);
                 REQUIRE_CMP(diff, <=, 150, "d"); // a little over 0.2%

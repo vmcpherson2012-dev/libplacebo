@@ -232,12 +232,16 @@ void pl_color_repr_limits(const struct pl_color_repr *repr,
     const float max_value = ((1LL << col_bits) - 1) << bits->bit_shift;
     float ymin, ymax, cmin, cmax;
     if (pl_color_levels_guess(repr) == PL_COLOR_LEVELS_LIMITED) {
-        const int shift = col_bits + bits->bit_shift - 8;
-        ymin = cmin = 16 << shift;
-        ymax = 235 << shift;
-        // Only YCbCr chroma has the wider 240 limit; the G and B channels of
-        // a limited range RGB signal share the 16-235 range of R
-        cmax = repr->sys == PL_COLOR_SYSTEM_RGB ? ymax : 240 << shift;
+        // The permissible range of a limited range signal is every code
+        // except the reserved timing references (8-bit 0 and 255, 10-bit
+        // 0-3 and 1020-1023; ITU-R BT.709, BT.2100). The footroom below
+        // nominal black (16) and the headroom above nominal white (235/240)
+        // are legal and carry real below-black and above-white content, so
+        // they are kept, identically on all three channels.
+        const int cshift = PL_MAX(col_bits - 8, 0);
+        const long long top = PL_MIN((255LL << cshift) - 1, (1LL << col_bits) - 1);
+        ymin = cmin = (1LL << cshift) << bits->bit_shift;
+        ymax = cmax = top << bits->bit_shift;
     } else {
         ymin = cmin = 0;
         ymax = cmax = max_value;

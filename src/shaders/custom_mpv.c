@@ -927,6 +927,9 @@ struct hook_priv {
 
     // Fixed (for shader-local resources)
     PL_ARRAY(struct pl_shader_desc) descriptors;
+    // VP fork: the shader's own texture for each descriptor a caller has
+    // replaced (pl_mpv_user_shader_set_texture), NULL where not replaced.
+    PL_ARRAY(pl_tex) vp_own_tex;
 
     // Dynamic per pass
     enum pl_hook_stage save_stages;
@@ -1731,6 +1734,38 @@ error:
     return NULL;
 }
 
+bool pl_mpv_user_shader_set_texture(const struct pl_hook *hook,
+                                    const char *name, pl_tex tex)
+{
+    if (!hook || !name)
+        return false;
+
+    struct hook_priv *p = PL_PRIV(hook);
+    for (int i = 0; i < p->descriptors.num; i++) {
+        struct pl_shader_desc *sd = &p->descriptors.elem[i];
+        if (sd->desc.type != PL_DESC_SAMPLED_TEX || strcmp(sd->desc.name, name) != 0)
+            continue;
+        if (tex && !tex->params.sampleable) {
+            PL_ERR(p, "Texture for '%s' is not sampleable", name);
+            return false;
+        }
+        while (p->vp_own_tex.num < p->descriptors.num)
+            PL_ARRAY_APPEND(p->alloc, p->vp_own_tex, NULL);
+        pl_tex *own = &p->vp_own_tex.elem[i];
+        if (tex) {
+            if (!*own)
+                *own = sd->binding.object;
+            sd->binding.object = tex;
+        } else if (*own) {
+            sd->binding.object = *own;
+            *own = NULL;
+        }
+        return true;
+    }
+
+    return false;
+}
+
 void pl_mpv_user_shader_destroy(const struct pl_hook **hookp)
 {
     const struct pl_hook *hook = *hookp;
@@ -1738,6 +1773,13 @@ void pl_mpv_user_shader_destroy(const struct pl_hook **hookp)
         return;
 
     struct hook_priv *p = PL_PRIV(hook);
+    // VP fork: a caller's texture is never destroyed here.
+    for (int i = 0; i < p->vp_own_tex.num && i < p->descriptors.num; i++) {
+        if (p->vp_own_tex.elem[i]) {
+            p->descriptors.elem[i].binding.object = p->vp_own_tex.elem[i];
+            p->vp_own_tex.elem[i] = NULL;
+        }
+    }
     for (int i = 0; i < p->descriptors.num; i++) {
         switch (p->descriptors.elem[i].desc.type) {
             case PL_DESC_BUF_UNIFORM:

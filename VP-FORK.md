@@ -65,8 +65,10 @@ libwinpthread), `include/libplacebo` (public headers + generated `config.h`),
 found, `exports.txt`, `BUILD-MANIFEST.txt` (commit, submodules, options,
 toolchain, tests) and `SHA256SUMS`.
 
-Meson registers 15 tests in this configuration (older notes say "13 library
-tests"), including `d3d11.c`, which needs a D3D11 device or WARP; all must pass.
+The suite has 13 library tests, including `d3d11.c` (needs a D3D11 device or
+WARP; it passes on the GitHub Windows runner). Meson adds the `libav.c` and
+`dav1d.c` header tests when the FFmpeg and dav1d development packages happen
+to be installed (15 tests on the local workstation). All must pass.
 By default `pl_version()` is the plain `v7.377.0`, as in the shipped DLL
 (which was built from a source archive); `--git-version` embeds `git describe`.
 VP's `vulkan-1.dll` in `3rdparty/libplacebo-beta/bin` is not a dependency of

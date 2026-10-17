@@ -76,6 +76,7 @@ TOOLCHAIN_REPORT=""
 DRIFT=0
 if [ -f "$PINS" ]; then
     while read -r pkg want; do
+        want="${want%$'\r'}"
         case "$pkg" in ''|'#'*) continue ;; esac
         have="$(pacman -Q "$pkg" 2>/dev/null | awk '{print $2}')" || true
         have="${have:-MISSING}"

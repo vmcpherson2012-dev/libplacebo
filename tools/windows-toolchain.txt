@@ -1,0 +1,17 @@
+# Known-good MSYS2 MINGW64 toolchain for the VP FL35 libplacebo build.
+# tools/build-windows.sh compares the installed packages with this list,
+# records both in the manifest, warns on drift, and fails with --strict.
+# Format: <pacman package> <version>
+mingw-w64-x86_64-gcc 16.2.0-5
+mingw-w64-x86_64-binutils 2.47-4
+mingw-w64-x86_64-crt 14.0.0.r426.g4564ee4b5-1
+mingw-w64-x86_64-headers 14.0.0.r426.g4564ee4b5-1
+mingw-w64-x86_64-winpthreads 14.0.0.r426.g4564ee4b5-1
+mingw-w64-x86_64-meson 1.12.1-1
+mingw-w64-x86_64-ninja 1.13.2-1
+mingw-w64-x86_64-pkgconf 1~3.0.7-2
+mingw-w64-x86_64-python 3.14.8-1
+mingw-w64-x86_64-shaderc 2026.4-1
+mingw-w64-x86_64-spirv-cross 1~1.4.363.0-1
+mingw-w64-x86_64-lcms2 2.19.1-1
+mingw-w64-x86_64-libdovi 3.4.0-1

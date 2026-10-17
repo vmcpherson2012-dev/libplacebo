@@ -1,0 +1,86 @@
+name: build-windows
+
+# Windows x64 build of the VP FL35 fork, identical to the local recipe in
+# tools/build-windows.sh (MSYS2 MINGW64 GCC + Meson; D3D11, shaderc, lcms2,
+# libdovi; Vulkan/OpenGL off), plus the MSVC import library from the .def.
+
+on:
+  push:
+    branches:
+      - vp-fl35
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2025
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up MSYS2 MINGW64
+        uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e # v2.33.0
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            git
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-binutils
+            mingw-w64-x86_64-meson
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-pkgconf
+            mingw-w64-x86_64-python
+            mingw-w64-x86_64-shaderc
+            mingw-w64-x86_64-spirv-cross
+            mingw-w64-x86_64-lcms2
+            mingw-w64-x86_64-libdovi
+
+      - name: Locate MSVC lib.exe
+        shell: pwsh
+        run: |
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          $lib = Get-ChildItem (Join-Path $vs 'VC\Tools\MSVC\*\bin\Hostx64\x64\lib.exe') |
+            Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $lib) { throw 'lib.exe not found' }
+          Write-Host "lib.exe: $lib"
+          $msys = '/' + $lib.Substring(0,1).ToLower() + ($lib.Substring(2) -replace '\\','/')
+          "LIB_EXE=$msys" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Build, test and collect
+        shell: msys2 {0}
+        run: |
+          git config --global --add safe.directory '*'
+          bash tools/build-windows.sh -j 4
+          cat dist/BUILD-MANIFEST.txt
+
+      - name: Check the bundle
+        shell: msys2 {0}
+        run: |
+          set -e
+          ls dist/lib/libplacebo-*.lib dist/lib/libplacebo-*.def dist/bin/libplacebo-*.dll
+          test "$(wc -l < dist/exports.txt)" -ge 514
+          grep -qx pl_mpv_user_shader_set_texture dist/exports.txt
+          (cd dist && sha256sum -c SHA256SUMS)
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: libplacebo-vp-fl35-win64-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+
+      - name: Upload test log
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: meson-logs-${{ github.sha }}
+          path: build-release/meson-logs/
+          if-no-files-found: ignore
